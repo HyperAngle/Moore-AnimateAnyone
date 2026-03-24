@@ -269,6 +269,77 @@ Loss = ||실제 노이즈 - 모델이 예측한 노이즈||²
 레퍼런스 사진은 모든 프레임에 동일하게 적용 (고정)
 ````
 
+6. 겪었던 오류 모음
+
+실제로 겪은 오류들. 같은 오류 나면 여기서 바로 찾기.
+
+오류 1: av 빌드 실패
+error: subprocess-exited-with-error
+× Getting requirements to build wheel did not run successfully.
+원인: FFmpeg 개발 헤더 없음
+해결:
+python!apt-get install -y libavformat-dev libavcodec-dev libavdevice-dev \
+    libavutil-dev libswscale-dev libswresample-dev libavfilter-dev pkg-config -q
+!pip install av==11.0.0
+
+오류 2: numpy 빌드 실패
+AttributeError: module 'pkgutil' has no attribute 'ImpImporter'
+원인: numpy==1.23.5가 Python 3.12 미지원
+해결:
+python!sed -i 's/numpy==1.23.5/numpy==1.26.4/' requirements.txt
+
+오류 3: onnxruntime-gpu 버전 없음
+ERROR: Could not find a version that satisfies the requirement onnxruntime-gpu==1.16.3
+원인: Python 3.12용 onnxruntime-gpu는 1.17.0부터 지원
+해결:
+python!sed -i 's/onnxruntime-gpu==1.16.3/onnxruntime-gpu==1.17.0/' requirements.txt
+
+오류 4: torch 버전 없음
+ERROR: Could not find a version that satisfies the requirement torch==2.0.1
+원인: torch==2.0.1이 Python 3.12 미지원, 2.2.0부터 지원
+해결: torch + torchvision 같이 바꿔야 함
+python!sed -i 's/torch==2.0.1/torch==2.2.0/' requirements.txt
+!sed -i 's/torchvision==0.15.2/torchvision==0.17.0/' requirements.txt
+
+오류 5: torchsde 메타데이터 오류
+WARNING: Ignoring version 0.2.5 of torchsde since it has invalid metadata
+ERROR: Could not find a version that satisfies the requirement torchsde==0.2.5
+원인: pip 버전이 너무 높아서 torchsde 메타데이터를 거부함
+해결:
+python!pip install "pip<24.1" -q
+!pip install torchsde==0.2.5 -q
+
+오류 6: xformers 충돌
+ERROR: Cannot install torch==2.2.0 and xformers==0.0.22 because these package versions have conflicting dependencies.
+원인: xformers==0.0.22가 torch==2.0.1 전용
+해결:
+python!sed -i 's/xformers==0.0.22/xformers==0.0.25/' requirements.txt
+
+오류 7: PositionNet import 오류
+ImportError: cannot import name 'PositionNet' from 'diffusers.models.embeddings'
+원인: diffusers 버전이 너무 높아서 구버전 API 없어짐
+해결:
+python!pip install diffusers==0.24.0 -q
+
+오류 8: hf_cache_home import 오류
+ImportError: cannot import name 'hf_cache_home' from 'huggingface_hub.constants'
+원인: huggingface_hub 버전이 너무 높음
+해결: huggingface_hub 직접 낮추면 연쇄 충돌 발생 → transformers 버전 올려서 해결
+python!sed -i 's/transformers==4.30.2/transformers==4.38.0/' requirements.txt
+
+오류 9: tokenizers 빌드 실패
+ERROR: Failed building wheel for tokenizers
+ERROR: Could not build wheels for tokenizers
+원인: transformers==4.30.2가 요구하는 tokenizers 버전이 Rust 컴파일 필요
+해결: transformers 버전 올리고 tokenizers는 이미 설치된 것 사용
+python!pip install -r requirements.txt --ignore-installed av tokenizers transformers -q
+
+WARNING vs ERROR 구분
+메시지의미WARNING경고만, 넘어가도 됨ERROR반드시 해결해야 함DEPRECATION나중에 없어질 거라는 예고, 지금은 괜찮음
+자주 나오는 무시해도 되는 경고:
+WARNING: Error parsing dependencies of torchsde: .* suffix can only be used...
+→ torchsde 메타데이터 경고, 설치는 정상적으로 됨
+
 ## 참고 링크
 - 레포: https://github.com/MooreThreads/Moore-AnimateAnyone
 - HuggingFace 데모: https://huggingface.co/spaces/xunsong/Moore-AnimateAnyone
