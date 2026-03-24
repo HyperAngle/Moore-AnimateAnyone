@@ -267,42 +267,7 @@ Loss = ||실제 노이즈 - 모델이 예측한 노이즈||²
 [9~24프레임] → 한 번에 처리 (슬라이딩 윈도우)
 ...
 레퍼런스 사진은 모든 프레임에 동일하게 적용 (고정)
-```
-
----
-
-## 6. 공부 로드맵
-
-### 오늘 회의 전까지 (코드 지도 그리기)
-
-**Step 1: 폴더 구조 파악**
-- `src/models/` 폴더 열어서 파일 목록 확인
-- 각 파일이 어떤 아키텍처 담당인지 매핑
-
-**Step 2: 추론 코드 흐름 따라가기**
-- `scripts/pose2vid.py` 열기
-- `main()` 함수에서 어떤 순서로 모델이 호출되는지 확인
-
-**Step 3: 학습 코드 훑기**
-- `train_stage_1.py` 열기
-- loss 계산하는 부분 찾기 (키워드: `loss`, `backward`)
-
-### 회의 때 답할 수 있으면 충분한 질문들
-- `pose2vid.py` 실행하면 어떤 순서로 뭐가 호출되나?
-- ReferenceNet, Pose Guider, Motion Module이 코드 어디에 있나?
-- 학습할 때 loss를 어디서 어떻게 계산하나?
-
-### 이후 공부 순서 (장기)
-```
-1. PyTorch 기초 (tensor, autograd)
-2. Diffusion Model 원리 (DDPM 논문)
-3. Stable Diffusion 구조
-4. ControlNet (Pose Guider 이해에 필수)
-5. Transformer / Attention 메커니즘
-6. AnimateAnyone 원논문
-```
-
----
+````
 
 ## 참고 링크
 - 레포: https://github.com/MooreThreads/Moore-AnimateAnyone
