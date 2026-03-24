@@ -1,272 +1,310 @@
-# 🤗 Introduction  
-**update** 🔥🔥🔥 We propose a face reenactment method, based on our AnimateAnyone pipeline: Using the facial landmark of driving video to control the pose of given source image, and keeping the identity of source image. Specially, we disentangle head attitude (including eyes blink) and mouth motion from the landmark of driving video, and it can control the expression and movements of source face precisely. We release our inference codes and pretrained models of face reenactment!!
+# Moore-AnimateAnyone 마스터 노트
 
+---
 
-**update** 🏋️🏋️🏋️ We release our training codes!! Now you can train your own AnimateAnyone models. See [here](#train) for more details. Have fun!
+## 목차
+1. 프로젝트 개요
+2. 깃허브 코드 구조
+3. 실행 방법 (Colab 기준)
+4. 아키텍처 구성 및 입출력 흐름
+5. 학습 과정
+6. 공부 로드맵
 
-**update**：🔥🔥🔥 We launch a HuggingFace Spaces demo of Moore-AnimateAnyone at [here](https://huggingface.co/spaces/xunsong/Moore-AnimateAnyone)!!
+---
 
-This repository reproduces [AnimateAnyone](https://github.com/HumanAIGC/AnimateAnyone). To align the results demonstrated by the original paper, we adopt various approaches and tricks, which may differ somewhat from the paper and another [implementation](https://github.com/guoqincode/Open-AnimateAnyone). 
+## 1. 프로젝트 개요
 
-It's worth noting that this is a very preliminary version, aiming for approximating the performance (roughly 80% under our test) showed in [AnimateAnyone](https://github.com/HumanAIGC/AnimateAnyone). 
+**Moore-AnimateAnyone**는 인물 사진 1장 + 포즈 영상을 입력으로 받아, 해당 인물이 포즈대로 움직이는 영상을 생성하는 AI 프로젝트.
 
-We will continue to develop it, and also welcome feedbacks and ideas from the community. The enhanced version will also be launched on our [MoBi MaLiang](https://maliang.mthreads.com/) AIGC platform, running on our own full-featured GPU S4000 cloud computing platform.
+- 원본 논문: AnimateAnyone (HumanAIGC)
+- 구현체: MooreThreads 재현 버전
+- 권장 환경: Python >= 3.10, CUDA = 11.7
 
-# 📝 Release Plans
-
-- [x] Inference codes and pretrained weights of AnimateAnyone  
-- [x] Training scripts of AnimateAnyone  
-- [x] Inference codes and pretrained weights of face reenactment
-- [ ] Training scripts of face reenactment
-- [ ] Inference scripts of audio driven portrait video generation
-- [ ] Training scripts of audio driven portrait video generation
-# 🎞️ Examples 
-
-## AnimateAnyone  
-
-Here are some AnimateAnyone results we generated, with the resolution of 512x768.
-
-https://github.com/MooreThreads/Moore-AnimateAnyone/assets/138439222/f0454f30-6726-4ad4-80a7-5b7a15619057
-
-https://github.com/MooreThreads/Moore-AnimateAnyone/assets/138439222/337ff231-68a3-4760-a9f9-5113654acf48
-
-<table class="center">
-    
-<tr>
-    <td width=50% style="border: none">
-        <video controls autoplay loop src="https://github.com/MooreThreads/Moore-AnimateAnyone/assets/138439222/9c4d852e-0a99-4607-8d63-569a1f67a8d2" muted="false"></video>
-    </td>
-    <td width=50% style="border: none">
-        <video controls autoplay loop src="https://github.com/MooreThreads/Moore-AnimateAnyone/assets/138439222/722c6535-2901-4e23-9de9-501b22306ebd" muted="false"></video>
-    </td>
-</tr>
-
-<tr>
-    <td width=50% style="border: none">
-        <video controls autoplay loop src="https://github.com/MooreThreads/Moore-AnimateAnyone/assets/138439222/17b907cc-c97e-43cd-af18-b646393c8e8a" muted="false"></video>
-    </td>
-    <td width=50% style="border: none">
-        <video controls autoplay loop src="https://github.com/MooreThreads/Moore-AnimateAnyone/assets/138439222/86f2f6d2-df60-4333-b19b-4c5abcd5999d" muted="false"></video>
-    </td>
-</tr>
-</table>
-
-**Limitation**: We observe following shortcomings in current version:
-1. The background may occur some artifacts, when the reference image has a clean background
-2. Suboptimal results may arise when there is a scale mismatch between the reference image and keypoints. We have yet to implement preprocessing techniques as mentioned in the [paper](https://arxiv.org/pdf/2311.17117.pdf).
-3. Some flickering and jittering may occur when the motion sequence is subtle or the scene is static.
-
-
-
-These issues will be addressed and improved in the near future. We appreciate your anticipation!
-
-## Face Reenactment
-
-Here are some results we generated, with the resolution of 512x512.  
-
-<table class="center">
-    
-<tr>
-    <td width=50% style="border: none">
-        <video controls autoplay loop src="https://github.com/MooreThreads/Moore-AnimateAnyone/assets/117793823/8cfaddec-fb81-485e-88e9-229c0adb8bf9" muted="false"></video>
-    </td>
-    <td width=50% style="border: none">
-        <video controls autoplay loop src="https://github.com/MooreThreads/Moore-AnimateAnyone/assets/117793823/ad06ba29-5bb2-490e-a204-7242c724ba8b" muted="false"></video>
-    </td>
-</tr>
-
-<tr>
-    <td width=50% style="border: none">
-        <video controls autoplay loop src="https://github.com/MooreThreads/Moore-AnimateAnyone/assets/117793823/6843cdc0-830b-4f91-87c5-41cd12fbe8c2" muted="false"></video>
-    </td>
-    <td width=50% style="border: none">
-        <video controls autoplay loop src="https://github.com/MooreThreads/Moore-AnimateAnyone/assets/117793823/bb9b8b74-ba4b-4f62-8fd1-7ebf140acc81" muted="false"></video>
-    </td>
-</tr>
-</table>
-
-
-# ⚒️ Installation
-
-## Build Environtment
-
-We Recommend a python version `>=3.10` and cuda version `=11.7`. Then build environment as follows:
-
-```shell
-# [Optional] Create a virtual env
-python -m venv .venv
-source .venv/bin/activate
-# Install with pip:
-pip install -r requirements.txt  
-# For face landmark extraction
-git clone https://github.com/emilianavt/OpenSeeFace.git  
+```
+입력: 인물 사진 1장 + 포즈 영상
+출력: 인물이 포즈대로 움직이는 영상
 ```
 
-## Download weights
+---
 
-**Automatically downloading**: You can run the following command to download weights automatically:
+## 2. 깃허브 코드 구조
 
-```shell
-python tools/download_weights.py
+```
+Moore-AnimateAnyone/
+├── scripts/
+│   ├── pose2vid.py         ← 추론 진입점 (AnimateAnyone 실행)
+│   └── lmks2vid.py         ← 추론 진입점 (Face Reenactment 실행)
+│
+├── src/
+│   └── models/
+│       ├── unet_2d_condition.py    ← Denoising UNet
+│       ├── unet_3d.py              ← Motion Module 포함 UNet
+│       ├── reference_net.py        ← ReferenceNet
+│       └── pose_guider.py          ← Pose Guider
+│
+├── configs/
+│   ├── inference/
+│   │   ├── ref_images/             ← 예시 레퍼런스 이미지
+│   │   ├── pose_videos/            ← 예시 포즈 영상 (_kps 붙은 것)
+│   │   └── inference.yaml          ← 추론 설정
+│   └── train/
+│       ├── stage1.yaml             ← 1단계 학습 설정
+│       └── stage2.yaml             ← 2단계 학습 설정
+│
+├── tools/
+│   ├── download_weights.py         ← 사전학습 가중치 자동 다운로드
+│   └── vid2pose.py                 ← 일반 영상 → 포즈 영상 변환
+│
+├── train_stage_1.py                ← 1단계 학습 실행
+├── train_stage_2.py                ← 2단계 학습 실행
+├── app.py                          ← Gradio 데모 앱
+└── requirements.txt
 ```
 
-Weights will be placed under the `./pretrained_weights` direcotry. The whole downloading process may take a long time.
+### 핵심 파일 3개만 기억하기
+| 파일 | 역할 |
+|------|------|
+| `scripts/pose2vid.py` | 추론 진입점, 여기서 시작 |
+| `src/models/unet_3d.py` | Motion Module 포함 핵심 모델 |
+| `train_stage_2.py` | 전체 학습 파이프라인 |
 
-**Manually downloading**: You can also download weights manually, which has some steps:
+---
 
-1. Download our AnimateAnyone trained [weights](https://huggingface.co/patrolli/AnimateAnyone/tree/main), which include four parts: `denoising_unet.pth`, `reference_unet.pth`, `pose_guider.pth` and `motion_module.pth`.
+## 3. 실행 방법 (Colab 기준)
 
-2. Download our trained [weights](https://pan.baidu.com/s/1lS5CynyNfYlDbjowKKfG8g?pwd=crci) of face reenactment, and place these weights under `pretrained_weights`.
+### 환경 세팅 시 주의사항
+Colab 기본 환경이 Python 3.12라 아래 패키지 버전 충돌 발생 → 수동으로 수정 필요
 
-3. Download pretrained weight of based models and other components: 
-    - [StableDiffusion V1.5](https://huggingface.co/runwayml/stable-diffusion-v1-5)
-    - [sd-vae-ft-mse](https://huggingface.co/stabilityai/sd-vae-ft-mse)
-    - [image_encoder](https://huggingface.co/lambdalabs/sd-image-variations-diffusers/tree/main/image_encoder)
+| 패키지 | requirements.txt 원본 | 수정 버전 |
+|--------|----------------------|-----------|
+| numpy | 1.23.5 | 1.26.4 |
+| onnxruntime-gpu | 1.16.3 | 1.17.0 |
+| torch | 2.0.1 | 2.2.0 |
+| torchvision | 0.15.2 | 0.17.0 |
 
-4. Download dwpose weights (`dw-ll_ucoco_384.onnx`, `yolox_l.onnx`) following [this](https://github.com/IDEA-Research/DWPose?tab=readme-ov-file#-dwpose-for-controlnet).
+### 셀 순서
 
-Finally, these weights should be orgnized as follows:
+**셀 1 - 설치**
+```python
+%cd /content
+!git clone https://github.com/MooreThreads/Moore-AnimateAnyone.git
+%cd Moore-AnimateAnyone
 
-```text
-./pretrained_weights/
-|-- DWPose
-|   |-- dw-ll_ucoco_384.onnx
-|   `-- yolox_l.onnx
-|-- image_encoder
-|   |-- config.json
-|   `-- pytorch_model.bin
-|-- denoising_unet.pth
-|-- motion_module.pth
-|-- pose_guider.pth
-|-- reference_unet.pth
-|-- sd-vae-ft-mse
-|   |-- config.json
-|   |-- diffusion_pytorch_model.bin
-|   `-- diffusion_pytorch_model.safetensors
-|-- reenact
-|   |-- denoising_unet.pth
-|   |-- reference_unet.pth
-|   |-- pose_guider1.pth
-|   |-- pose_guider2.pth
-`-- stable-diffusion-v1-5
-    |-- feature_extractor
-    |   `-- preprocessor_config.json
-    |-- model_index.json
-    |-- unet
-    |   |-- config.json
-    |   `-- diffusion_pytorch_model.bin
-    `-- v1-inference.yaml
+!apt-get install -y libavformat-dev libavcodec-dev libavdevice-dev \
+    libavutil-dev libswscale-dev libswresample-dev libavfilter-dev pkg-config -q
+
+!pip install "pip<24.1" -q
+!pip install av==11.0.0 -q
+
+!sed -i 's/numpy==1.23.5/numpy==1.26.4/' requirements.txt
+!sed -i 's/onnxruntime-gpu==1.16.3/onnxruntime-gpu==1.17.0/' requirements.txt
+!sed -i 's/torch==2.0.1/torch==2.2.0/' requirements.txt
+!sed -i 's/torchvision==0.15.2/torchvision==0.17.0/' requirements.txt
+
+!pip install -r requirements.txt --ignore-installed av -q
 ```
 
-Note: If you have installed some of the pretrained models, such as `StableDiffusion V1.5`, you can specify their paths in the config file (e.g. `./config/prompts/animation.yaml`).
-
-# 🚀 Training and Inference 
-
-## Inference of AnimateAnyone
-
-Here is the cli command for running inference scripts:
-
-```shell
-python -m scripts.pose2vid --config ./configs/prompts/animation.yaml -W 512 -H 784 -L 64
+**셀 2 - 가중치 다운로드** (수 GB, 시간 걸림)
+```python
+!python tools/download_weights.py
 ```
 
-You can refer the format of `animation.yaml` to add your own reference images or pose videos. To convert the raw video into a pose video (keypoint sequence), you can run with the following command:
-
-```shell
-python tools/vid2pose.py --video_path /path/to/your/video.mp4
+**셀 3 - 예시 파일 확인**
+```python
+!find . -name "*.jpg" -o -name "*.png" -o -name "*.mp4" | head -20
+# 레퍼런스: ./configs/inference/ref_images/anyone-1.png
+# 포즈영상: ./configs/inference/pose_videos/anyone-video-1_kps.mp4
 ```
 
-## Inference of Face Reenactment
-Here is the cli command for running inference scripts:
+**셀 4 - config 생성**
+```python
+import yaml, os
 
-```shell
-python -m scripts.lmks2vid --config ./configs/prompts/inference_reenact.yaml --driving_video_path YOUR_OWN_DRIVING_VIDEO_PATH --source_image_path YOUR_OWN_SOURCE_IMAGE_PATH  
-```  
-We provide some face images in `./config/inference/talkinghead_images`, and some face videos in `./config/inference/talkinghead_videos` for inference.  
+config = {
+    "pretrained_base_model_path": "./pretrained_weights/stable-diffusion-v1-5",
+    "pretrained_vae_path": "./pretrained_weights/sd-vae-ft-mse",
+    "image_encoder_path": "./pretrained_weights/image_encoder",
+    "denoising_unet_path": "./pretrained_weights/denoising_unet.pth",
+    "reference_unet_path": "./pretrained_weights/reference_unet.pth",
+    "pose_guider_path": "./pretrained_weights/pose_guider.pth",
+    "motion_module_path": "./pretrained_weights/motion_module.pth",
+    "inference_config": "./configs/inference/inference.yaml",
+    "test_cases": {
+        "./configs/inference/ref_images/anyone-1.png": [
+            "./configs/inference/pose_videos/anyone-video-1_kps.mp4"
+        ]
+    }
+}
 
-## <span id="train"> Training of AnimateAnyone </span>
-
-Note: package dependencies have been updated, you may upgrade your environment via `pip install -r requirements.txt` before training.
-
-### Data Preparation
-
-Extract keypoints from raw videos: 
-
-```shell
-python tools/extract_dwpose_from_vid.py --video_root /path/to/your/video_dir
+os.makedirs("configs/prompts", exist_ok=True)
+with open("configs/prompts/my_animation.yaml", "w") as f:
+    yaml.dump(config, f, default_flow_style=False)
 ```
 
-Extract the meta info of dataset:
-
-```shell
-python tools/extract_meta_info.py --root_path /path/to/your/video_dir --dataset_name anyone 
+**셀 5 - 추론 실행**
+```python
+!python -m scripts.pose2vid \
+    --config ./configs/prompts/my_animation.yaml \
+    -W 512 \
+    -H 784 \
+    -L 32   # 프레임 수 (줄이면 빠름)
 ```
 
-Update lines in the training config file: 
+**셀 6 - 결과 확인 및 다운로드**
+```python
+from IPython.display import Video, display
+from google.colab import files
+import glob
 
-```yaml
-data:
-  meta_paths:
-    - "./data/anyone_meta.json"
+output_files = glob.glob("output/**/*.mp4", recursive=True)
+display(Video(output_files[-1], embed=True))
+files.download(output_files[-1])
 ```
 
-### Stage1
+---
 
-Put [openpose controlnet weights](https://huggingface.co/lllyasviel/control_v11p_sd15_openpose/tree/main) under `./pretrained_weights`, which is used to initialize the pose_guider.
+## 4. 아키텍처 구성 및 입출력 흐름
 
-Put [sd-image-variation](https://huggingface.co/lambdalabs/sd-image-variations-diffusers/tree/main) under `./pretrained_weights`, which is used to initialize unet weights.
+### 전체 파이프라인
 
-Run command:
-
-```shell
-accelerate launch train_stage_1.py --config configs/train/stage1.yaml
+```
+레퍼런스 사진 ──→ ReferenceNet ──→ 외형 feature map
+                                        ↓ Cross-Attention
+포즈 영상 ──→ DWPose ──→ 스틱맨 ──→ Pose Guider ──→ 포즈 조건
+                                        ↓
+순수 노이즈 ──────────────────→ Denoising UNet
+                                    ↑ (16~24프레임 묶음)
+                               Motion Module
+                               (Temporal Attention)
+                                        ↓
+                                완성된 영상 프레임들
 ```
 
-### Stage2
+### 각 컴포넌트 입출력
 
-Put the pretrained motion module weights `mm_sd_v15_v2.ckpt` ([download link](https://huggingface.co/guoyww/animatediff/blob/main/mm_sd_v15_v2.ckpt)) under `./pretrained_weights`. 
+**DWPose**
+- 입력: 일반 영상 프레임 (RGB 이미지)
+- 처리: YOLOX로 사람 감지 → 관절 위치 추출 (.onnx 모델)
+- 출력: 18개 관절 좌표 → 스틱맨 이미지
 
-Specify the stage1 training weights in the config file `stage2.yaml`, for example:
+**ReferenceNet**
+- 입력: 레퍼런스 인물 사진 1장 (512x768)
+- 처리: UNet 인코더 구조로 특징 추출
+- 출력: 외형 feature map (옷, 얼굴, 체형 정보가 담긴 벡터)
 
-```yaml
-stage1_ckpt_dir: './exp_output/stage1'
-stage1_ckpt_step: 30000 
+**Pose Guider**
+- 입력: DWPose가 만든 스틱맨 이미지
+- 처리: 경량 CNN
+- 출력: 포즈 조건 벡터 → Denoising UNet에 더해짐(add)
+
+**Denoising UNet (핵심)**
+- 입력: 노이즈 이미지 + ReferenceNet feature + Pose 조건 + CLIP embedding
+- 처리: Cross-Attention으로 외형 반영, 노이즈 제거 50스텝 반복
+- 출력: 깨끗한 이미지 프레임
+
+**Motion Module**
+- 입력: UNet이 처리 중인 N개 프레임의 feature map
+- 처리: Temporal Attention으로 프레임 간 관계 학습
+- 출력: 시간적으로 일관성 있게 조정된 feature map
+
+### Attention 메커니즘 (핵심 개념)
+```
+Query  : 나는 뭘 찾고 있나? (노이즈 이미지의 픽셀)
+Key    : 나는 어떤 정보를 갖고 있나? (레퍼런스의 각 부분)
+Value  : 실제 정보 내용
+
+→ Query와 Key 유사도 계산 → 유사도 비율대로 Value 가져옴
+→ 이게 "참고한다"는 것의 실체
 ```
 
-Run command:
+| Attention 종류 | 역할 |
+|----------------|------|
+| Self-Attention | 이미지 내부 픽셀끼리 참조 |
+| Cross-Attention | 노이즈 이미지가 레퍼런스 참조 |
+| Temporal Attention | 프레임끼리 시간축으로 참조 |
 
-```shell
-accelerate launch train_stage_2.py --config configs/train/stage2.yaml
+---
+
+## 5. 학습 과정
+
+### 학습 데이터
+- 인터넷에서 수집한 인물 댄스 영상
+- 별도 라벨링 없이 자기 자신이 정답 (self-supervised)
+
+```
+하나의 영상에서:
+├── 랜덤 프레임 1장 → 레퍼런스 이미지 (입력)
+├── 전체 프레임의 포즈 추출 → 포즈 시퀀스 (조건)
+└── 전체 프레임 → 타겟 영상 (정답)
 ```
 
-# 🎨 Gradio Demo
+### 2단계 학습 구조
 
-**HuggingFace Demo**: We launch a quick preview demo of Moore-AnimateAnyone at [HuggingFace Spaces](https://huggingface.co/spaces/xunsong/Moore-AnimateAnyone)!!
-We appreciate the assistance provided by the HuggingFace team in setting up this demo.
+**Stage 1 - 공간적 외형 학습**
+- ReferenceNet + Pose Guider만 학습
+- Motion Module 없음
+- 인물 외형을 포즈에 맞게 그리는 법 학습
 
-To reduce waiting time, we limit the size (width, height, and length) and inference steps when generating videos. 
+**Stage 2 - 시간적 움직임 학습**
+- Motion Module 추가
+- Stage 1 가중치 불러와서 이어서 학습
+- 프레임 간 자연스러운 움직임 학습
 
-If you have your own GPU resource (>= 16GB vram), you can run a local gradio app via following commands:
+### 손실 함수
+```
+정답 프레임 → 노이즈 추가 → 모델이 노이즈 예측 → 예측 오차로 학습
 
-`python app.py`
+Loss = ||실제 노이즈 - 모델이 예측한 노이즈||²
+```
+- 원본 이미지를 직접 맞추는 게 아님
+- "내가 추가한 노이즈가 뭔지"를 맞추는 것을 학습
+- 레퍼런스 이미지는 조건으로만 사용 (Cross-Attention)
 
-# Community Contributions
+### 프레임 처리 방식
+```
+포즈 영상 전체를 16~24프레임 묶음으로 처리
+[1~16프레임] → 한 번에 처리
+[9~24프레임] → 한 번에 처리 (슬라이딩 윈도우)
+...
+레퍼런스 사진은 모든 프레임에 동일하게 적용 (고정)
+```
 
-- Installation for Windows users: [Moore-AnimateAnyone-for-windows](https://github.com/sdbds/Moore-AnimateAnyone-for-windows)
+---
 
-# 🖌️ Try on Mobi MaLiang
+## 6. 공부 로드맵
 
-We will launched this model on our [MoBi MaLiang](https://maliang.mthreads.com/) AIGC platform, running on our own full-featured GPU S4000 cloud computing platform. Mobi MaLiang has now integrated various AIGC applications and functionalities (e.g. text-to-image, controllable generation...). You can experience it by [clicking this link](https://maliang.mthreads.com/) or scanning the QR code bellow via WeChat!
+### 오늘 회의 전까지 (코드 지도 그리기)
 
-<p align="left">
-  <img src="assets/mini_program_maliang.png" width="100
-  "/>
-</p> 
+**Step 1: 폴더 구조 파악**
+- `src/models/` 폴더 열어서 파일 목록 확인
+- 각 파일이 어떤 아키텍처 담당인지 매핑
 
-# ⚖️ Disclaimer
+**Step 2: 추론 코드 흐름 따라가기**
+- `scripts/pose2vid.py` 열기
+- `main()` 함수에서 어떤 순서로 모델이 호출되는지 확인
 
-This project is intended for academic research, and we explicitly disclaim any responsibility for user-generated content. Users are solely liable for their actions while using the generative model. The project contributors have no legal affiliation with, nor accountability for, users' behaviors. It is imperative to use the generative model responsibly, adhering to both ethical and legal standards.
+**Step 3: 학습 코드 훑기**
+- `train_stage_1.py` 열기
+- loss 계산하는 부분 찾기 (키워드: `loss`, `backward`)
 
-# 🙏🏻 Acknowledgements
+### 회의 때 답할 수 있으면 충분한 질문들
+- `pose2vid.py` 실행하면 어떤 순서로 뭐가 호출되나?
+- ReferenceNet, Pose Guider, Motion Module이 코드 어디에 있나?
+- 학습할 때 loss를 어디서 어떻게 계산하나?
 
-We first thank the authors of [AnimateAnyone](). Additionally, we would like to thank the contributors to the [majic-animate](https://github.com/magic-research/magic-animate), [animatediff](https://github.com/guoyww/AnimateDiff) and [Open-AnimateAnyone](https://github.com/guoqincode/Open-AnimateAnyone) repositories, for their open research and exploration. Furthermore, our repo incorporates some codes from [dwpose](https://github.com/IDEA-Research/DWPose) and [animatediff-cli-prompt-travel](https://github.com/s9roll7/animatediff-cli-prompt-travel/), and we extend our thanks to them as well.
+### 이후 공부 순서 (장기)
+```
+1. PyTorch 기초 (tensor, autograd)
+2. Diffusion Model 원리 (DDPM 논문)
+3. Stable Diffusion 구조
+4. ControlNet (Pose Guider 이해에 필수)
+5. Transformer / Attention 메커니즘
+6. AnimateAnyone 원논문
+```
+
+---
+
+## 참고 링크
+- 레포: https://github.com/MooreThreads/Moore-AnimateAnyone
+- HuggingFace 데모: https://huggingface.co/spaces/xunsong/Moore-AnimateAnyone
+- AnimateAnyone 원논문: https://arxiv.org/pdf/2311.17117.pdf
